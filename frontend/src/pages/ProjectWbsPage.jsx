@@ -6,10 +6,10 @@ import { isHoliday } from "@holiday-jp/holiday_jp";
 
 const ProjectWBSPage = () => {
   const [project, setProject] = useState({
+    type: "",
     userName: "",
     systemName: "",
     name: "",
-    client: "",
     startDate: "",
     endDate: "",
   });
@@ -142,15 +142,19 @@ const ProjectWBSPage = () => {
       const dateLabel = format(d, "M/d");
       const isToday =
         format(d, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
-      const isHolidayOrWeekend =
-        isHoliday(d) || d.getDay() === 0 || d.getDay() === 6;
-
+      const isSunday = d.getDay() === 0;
+      const isSaturday = d.getDay() === 6;
+      const holiday = isHoliday(d);
       return (
         <div
           key={dateLabel}
           style={{ width: "30px" }}
           className={`border-end text-center small ${
-            isHolidayOrWeekend ? "text-danger" : ""
+            isSunday || holiday
+              ? "text-danger"
+              : isSaturday
+              ? "text-primary"
+              : ""
           } ${isToday ? "bg-warning-subtle fw-bold" : ""}`}
         >
           {dateLabel}
@@ -167,6 +171,18 @@ const ProjectWBSPage = () => {
         <h2 className="h5 mb-3 fw-bold">プロジェクト情報</h2>
         <div className="row g-2 row-cols-1 row-cols-sm-2 row-cols-md-4">
           {" "}
+          <div className="col">
+            <select
+              className="form-select"
+              value={project.type}
+              onChange={(e) => setProject({ ...project, type: e.target.value })}
+            >
+              <option value="">種別を選択</option>
+              <option value="国保組合">国保組合</option>
+              <option value="マネキン">マネキン</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
           <div className="col">
             <input
               type="text"
@@ -198,7 +214,7 @@ const ProjectWBSPage = () => {
               onChange={(e) => setProject({ ...project, name: e.target.value })}
             />
           </div>
-          <div className="col">
+          {/* <div className="col">
             <input
               type="text"
               className="form-control"
@@ -208,7 +224,7 @@ const ProjectWBSPage = () => {
                 setProject({ ...project, client: e.target.value })
               }
             />
-          </div>
+          </div> */}
           <div className="col">
             <input
               type="date"
