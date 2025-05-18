@@ -1,9 +1,8 @@
-// ProjectWBSPage.jsx
+// ProjectWBSPage.jsx（スケジュールカレンダー簡略化版）
 import React, { useState, useEffect } from "react";
-import { format, eachDayOfInterval } from "date-fns";
-import ja from "date-fns/locale/ja";
-import { isHoliday } from "@holiday-jp/holiday_jp";
-import GanttRow from "../components/GanttRow"; // ← 相対パスは適宜調整
+import { format } from "date-fns";
+import GanttRow from "../components/GanttRow";
+import ScheduleCalendar from "../components/ScheduleCalendar";
 
 const ProjectWBSPage = () => {
   const [project, setProject] = useState({
@@ -30,31 +29,18 @@ const ProjectWBSPage = () => {
       inputDate: new Date().toISOString().split("T")[0],
     },
   ]);
-  // ✅ ここに useEffect を入れる
+
   useEffect(() => {
     console.log("🔍 WBS Items", wbsItems);
     console.log("📅 Project Dates", project.startDate, project.endDate);
   }, [wbsItems, project]);
 
-  const assigneeOptions = ["白井", "庄司", "倉内", "金沢", "山田", "佐藤"];
-  const progressOptions = ["未着手", "進行中", "完了", "保留", "○"];
-  const processOptions = {
-    "03": {
-      label: "マイグレーション",
-      sub: [
-        { code: "01", label: "事前準備等" },
-        { code: "02", label: "方針検討" },
-        { code: "03", label: "マイグレーション仕様" },
-        { code: "04", label: "マイグレーション" },
-      ],
-    },
-    "04": {
-      label: "システムテスト",
-      sub: [
-        { code: "01", label: "シナリオ一覧作成" },
-        { code: "02", label: "テスト仕様書作成" },
-      ],
-    },
+  const isValidDate = (date) => !isNaN(new Date(date).getTime());
+  const isValidNumber = (value) => !isNaN(parseFloat(value)) && isFinite(value);
+
+  const calculateProgressRate = (planned, actual) => {
+    if (!isValidNumber(planned) || planned === 0) return "-";
+    return `${Math.round((actual / planned) * 100)}%`;
   };
 
   const handleWbsChange = (index, field, value) => {
@@ -87,114 +73,9 @@ const ProjectWBSPage = () => {
     setWbsItems(updated);
   };
 
-  const isValidDate = (date) => !isNaN(new Date(date).getTime());
-  const isValidNumber = (value) => !isNaN(parseFloat(value)) && isFinite(value);
-
-  // const renderScheduleBar = (start, end) => {
-  //   const oneDay = 1000 * 60 * 60 * 24;
-  //   const startDate = new Date(start);
-  //   const endDate = new Date(end);
-  //   const projectStart = new Date(project.startDate);
-  //   const projectEnd = new Date(project.endDate);
-
-  //   // ✅ 無効な日付チェック（既存）
-  //   if (
-  //     isNaN(startDate) ||
-  //     isNaN(endDate) ||
-  //     isNaN(projectStart) ||
-  //     isNaN(projectEnd)
-  //   )
-  //     return null;
-
-  //   // ✅ ここに書く（プロジェクト期間外のタスクは非表示にする）
-  //   if (endDate < projectStart || startDate > projectEnd) {
-  //     console.warn("⛔ タスクがプロジェクト期間外にあります", {
-  //       start,
-  //       end,
-  //       projectStart,
-  //       projectEnd,
-  //     });
-  //     return null;
-  //   }
-
-  //   // 以下は既存の位置計算と描画処理
-  //   const offsetLeft = Math.max(
-  //     0,
-  //     Math.floor((startDate - projectStart) / oneDay)
-  //   );
-  //   const taskDuration = Math.max(
-  //     1,
-  //     Math.floor((endDate - startDate) / oneDay) + 1
-  //   );
-  //   const totalColumns = eachDayOfInterval({
-  //     start: projectStart,
-  //     end: projectEnd,
-  //   }).length;
-  //   const totalWidth = totalColumns * 30;
-
-  //   return (
-  //     <div
-  //       className="position-relative"
-  //       style={{
-  //         width: `${totalWidth}px`,
-  //         height: "24px",
-  //       }}
-  //     >
-  //       <div
-  //         className="bg-primary position-absolute"
-  //         style={{
-  //           left: `${offsetLeft * 30}px`,
-  //           width: `${taskDuration * 30}px`,
-  //           height: "100%",
-  //         }}
-  //       ></div>
-  //     </div>
-  //   );
-  // };
-
-  const calculateProgressRate = (planned, actual) => {
-    if (!isValidNumber(planned) || planned === 0) return "-";
-    const rate = Math.round((actual / planned) * 100);
-    return `${rate}%`;
-  };
-
-  const getDateHeaders = () => {
-    if (!isValidDate(project.startDate) || !isValidDate(project.endDate))
-      return [];
-    const range = eachDayOfInterval({
-      start: new Date(project.startDate),
-      end: new Date(project.endDate),
-    });
-    return range.map((d) => {
-      const dayLabel = format(d, "E", { locale: ja });
-      const dateLabel = format(d, "M/d");
-      const isToday =
-        format(d, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
-      const isSunday = d.getDay() === 0;
-      const isSaturday = d.getDay() === 6;
-      const holiday = isHoliday(d);
-      return (
-        <div
-          key={dateLabel}
-          style={{ width: "30px" }}
-          className={`border-end text-center small ${
-            isSunday || holiday
-              ? "text-danger"
-              : isSaturday
-              ? "text-primary"
-              : ""
-          } ${isToday ? "bg-warning-subtle fw-bold" : ""}`}
-        >
-          {dateLabel}
-          <br />
-          {dayLabel}
-        </div>
-      );
-    });
-  };
-
   return (
     <div className="container-fluid p-0 vh-100 overflow-hidden">
+      {/* プロジェクト情報入力 */}
       <div className="sticky-top top-0 bg-white border-bottom py-3 px-4 z-3">
         <h2 className="h5 mb-3 fw-bold">プロジェクト情報</h2>
         <div className="row g-2 row-cols-1 row-cols-sm-2 row-cols-md-4">
@@ -242,17 +123,6 @@ const ProjectWBSPage = () => {
               onChange={(e) => setProject({ ...project, name: e.target.value })}
             />
           </div>
-          {/* <div className="col">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="クライアント名"
-              value={project.client}
-              onChange={(e) =>
-                setProject({ ...project, client: e.target.value })
-              }
-            />
-          </div> */}
           <div className="col">
             <input
               type="date"
@@ -276,8 +146,9 @@ const ProjectWBSPage = () => {
         </div>
       </div>
 
-      <h3 className="h6 mb-3 fw-semibold">WBS工程</h3>
-      <div className="table-responsive">
+      {/* WBSテーブル（編集可） */}
+      <h3 className="h6 mb-3 fw-semibold px-4">WBS工程</h3>
+      <div className="table-responsive px-4">
         <table className="table table-bordered table-sm align-middle text-center">
           <thead className="table-light">
             <tr>
@@ -476,55 +347,10 @@ const ProjectWBSPage = () => {
         </button>
         <button className="btn btn-primary btn-sm">💾保存</button>
       </div>
-      {/* ✅ スケジュールカレンダー */}
+
+      {/* ✅ 月間カレンダーのみ表示 */}
       <div className="mt-5 px-4">
-        <h5 className="mb-3">スケジュールカレンダー</h5>
-
-        {isValidDate(project.startDate) && isValidDate(project.endDate) && (
-          <div className="border rounded" style={{ overflowX: "auto" }}>
-            {/* プロジェクト期間表示 */}
-            <div className="mb-2 text-muted px-3 pt-2">
-              プロジェクト期間:{" "}
-              {format(new Date(project.startDate), "yyyy/MM/dd")} ～{" "}
-              {format(new Date(project.endDate), "yyyy/MM/dd")}
-            </div>
-
-            {/* 💡 横スクロール対象のラッパー */}
-            <div style={{ minWidth: `${getDateHeaders().length * 30}px` }}>
-              {/* ヘッダー行（1日30px） */}
-              <div
-                className="d-flex border-bottom"
-                style={{ fontSize: "0.75rem", height: "40px" }}
-              >
-                {getDateHeaders()}
-              </div>
-
-              {/* 各WBS行（ガントバー） */}
-              {wbsItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="border-bottom px-2 py-2"
-                  style={{ minWidth: `${getDateHeaders().length * 30}px` }}
-                >
-                  <div className="fw-semibold mb-1">
-                    {item.wbsName || "(工程未入力)"} —{" "}
-                    <span className="text-muted">
-                      進捗:{" "}
-                      {calculateProgressRate(item.plannedQty, item.actualQty)}
-                    </span>
-                  </div>
-                  {/* ✅ Ganttバーの描画 */}
-                  <GanttRow
-                    item={item}
-                    projectStart={project.startDate}
-                    projectEnd={project.endDate}
-                  />
-                  <ScheduleCalendar wbsItems={wbsItems} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <ScheduleCalendar wbsItems={wbsItems} />
       </div>
     </div>
   );
