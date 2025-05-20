@@ -11,10 +11,23 @@ import {
 import { ja } from "date-fns/locale";
 import { isHoliday } from "@holiday-jp/holiday_jp";
 
-const ScheduleCalendar = ({ wbsItems = [] }) => {
+// ✅ プロジェクト期間を受け取り、月送りボタンを制限
+const ScheduleCalendar = ({ wbsItems = [], projectStart, projectEnd }) => {
   const [baseDate, setBaseDate] = useState(new Date());
   const MAX_DAYS = 31;
 
+  // 📅 現在表示している月の開始・終了日
+  const monthStart = startOfMonth(baseDate);
+  const monthEnd = endOfMonth(baseDate);
+
+  // 🔒 プロジェクト期間（制限範囲）
+  const startLimit = startOfMonth(new Date(projectStart));
+  const endLimit = startOfMonth(new Date(projectEnd));
+
+  const canGoPrev = monthStart > startLimit;
+  const canGoNext = monthStart < endLimit;
+
+  // 📆 固定31日構成のヘッダー用日付リスト
   const getFixedDateList = () => {
     const year = baseDate.getFullYear();
     const month = baseDate.getMonth();
@@ -35,9 +48,8 @@ const ScheduleCalendar = ({ wbsItems = [] }) => {
   };
 
   const dateList = getFixedDateList();
-  const monthStart = startOfMonth(baseDate);
-  const monthEnd = endOfMonth(baseDate);
 
+  // 📅 日付ヘッダーの表示
   const getDateHeaders = () =>
     dateList.map((d, idx) => {
       if (!d) {
@@ -83,6 +95,7 @@ const ScheduleCalendar = ({ wbsItems = [] }) => {
       );
     });
 
+  // 📊 進捗バーの描画
   const renderBar = (item) => {
     const oneDay = 1000 * 60 * 60 * 24;
     const itemStart = new Date(item.startDate);
@@ -129,7 +142,7 @@ const ScheduleCalendar = ({ wbsItems = [] }) => {
     return `${Math.round((actual / planned) * 100)}%`;
   };
 
-  // 🔽 フィルタ: 表示月に該当する工程だけ表示
+  // 🔽 表示月にかかっているWBSだけを表示
   const filteredItems = wbsItems.filter((item) => {
     const itemStart = new Date(item.startDate);
     const itemEnd = new Date(item.endDate);
@@ -138,11 +151,13 @@ const ScheduleCalendar = ({ wbsItems = [] }) => {
 
   return (
     <div className="p-3 border rounded" style={{ overflowX: "auto" }}>
+      {/* 📅 月送りボタン */}
       <div className="d-flex justify-content-between mb-2">
         <div className="btn-group">
           <button
             className="btn btn-sm btn-outline-primary"
             onClick={() => setBaseDate((prev) => subMonths(prev, 1))}
+            disabled={!canGoPrev}
           >
             前月
           </button>
@@ -155,6 +170,7 @@ const ScheduleCalendar = ({ wbsItems = [] }) => {
           <button
             className="btn btn-sm btn-outline-primary"
             onClick={() => setBaseDate((prev) => addMonths(prev, 1))}
+            disabled={!canGoNext}
           >
             次月
           </button>
@@ -164,6 +180,7 @@ const ScheduleCalendar = ({ wbsItems = [] }) => {
         </div>
       </div>
 
+      {/* 📊 スケジュール表本体 */}
       <div style={{ minWidth: `${dateList.length * 30}px` }}>
         <div className="d-flex border-bottom">{getDateHeaders()}</div>
 

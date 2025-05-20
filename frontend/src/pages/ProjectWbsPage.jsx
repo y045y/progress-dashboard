@@ -363,8 +363,8 @@ const ProjectWBSPage = () => {
         <h5 className="mb-3">スケジュールカレンダー</h5>
         <ScheduleCalendar
           wbsItems={wbsItems}
-          startDay={project.startDate}
-          endDay={project.endDate}
+          projectStart={project.startDate}
+          projectEnd={project.endDate}
         />
       </div>
     </div>
