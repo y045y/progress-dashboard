@@ -15,6 +15,7 @@ import { isHoliday } from "@holiday-jp/holiday_jp";
 const ScheduleCalendar = ({ wbsItems = [], projectStart, projectEnd }) => {
   const [baseDate, setBaseDate] = useState(new Date());
   const MAX_DAYS = 31;
+  const CELL_WIDTH = 40;
 
   // 📅 現在表示している月の開始・終了日
   const monthStart = startOfMonth(baseDate);
@@ -58,7 +59,7 @@ const ScheduleCalendar = ({ wbsItems = [], projectStart, projectEnd }) => {
             key={idx}
             className="text-center border-end"
             style={{
-              width: 30,
+              width: CELL_WIDTH,
               fontSize: "0.75rem",
               backgroundColor: "#f8f9fa",
             }}
@@ -82,7 +83,7 @@ const ScheduleCalendar = ({ wbsItems = [], projectStart, projectEnd }) => {
           key={idx}
           className="text-center border-end"
           style={{
-            width: 30,
+            width: CELL_WIDTH,
             fontSize: "0.75rem",
             backgroundColor: bgColor,
             fontWeight: isToday ? "bold" : "normal",
@@ -111,14 +112,14 @@ const ScheduleCalendar = ({ wbsItems = [], projectStart, projectEnd }) => {
         className="position-relative bg-light rounded"
         style={{
           height: "24px",
-          width: `${dateList.length * 30}px`,
+          width: `${dateList.length * CELL_WIDTH}px`,
         }}
       >
         <div
           className="position-absolute bg-secondary bg-opacity-25"
           style={{
-            left: `${offset * 30}px`,
-            width: `${span * 30}px`,
+            left: `${offset * CELL_WIDTH}px`,
+            width: `${span * CELL_WIDTH}px`,
             height: "100%",
             borderRadius: "4px",
           }}
@@ -127,8 +128,8 @@ const ScheduleCalendar = ({ wbsItems = [], projectStart, projectEnd }) => {
         <div
           className="position-absolute bg-primary"
           style={{
-            left: `${offset * 30}px`,
-            width: `${span * 30 * progress}px`,
+            left: `${offset * CELL_WIDTH}px`,
+            width: `${span * CELL_WIDTH * progress}px`,
             height: "100%",
             borderRadius: "4px",
           }}
@@ -181,7 +182,7 @@ const ScheduleCalendar = ({ wbsItems = [], projectStart, projectEnd }) => {
       </div>
 
       {/* 📊 スケジュール表本体 */}
-      <div style={{ minWidth: `${dateList.length * 30}px` }}>
+      <div style={{ minWidth: `${dateList.length * CELL_WIDTH}px` }}>
         <div className="d-flex border-bottom">{getDateHeaders()}</div>
 
         {filteredItems.map((item, idx) => (
